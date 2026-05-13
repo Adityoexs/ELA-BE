@@ -66,7 +66,7 @@ func (h *Handler) GetByID(c *gin.Context) {
 
 	res := response.(GetByIDResponse)
 	if res.Error != "" {
-		if errors.Is(errors.New(res.Error), ErrNotFound) || res.Error == ErrNotFound.Error() {
+		if res.Error == ErrNotFound.Error() {
 			c.JSON(http.StatusNotFound, gin.H{"error": res.Error})
 			return
 		}
@@ -117,7 +117,7 @@ func (h *Handler) Update(c *gin.Context) {
 
 	res := response.(UpdateResponse)
 	if res.Error != "" {
-		if errors.Is(errors.New(res.Error), ErrNotFound) || res.Error == ErrNotFound.Error() {
+		if res.Error == ErrNotFound.Error() {
 			c.JSON(http.StatusNotFound, gin.H{"error": res.Error})
 			return
 		}
@@ -144,7 +144,7 @@ func (h *Handler) Delete(c *gin.Context) {
 
 	res := response.(DeleteResponse)
 	if res.Error != "" {
-		if errors.Is(errors.New(res.Error), ErrNotFound) || res.Error == ErrNotFound.Error() {
+		if res.Error == ErrNotFound.Error() {
 			c.JSON(http.StatusNotFound, gin.H{"error": res.Error})
 			return
 		}
@@ -159,6 +159,9 @@ func parseID(id string) (uint, error) {
 	parsed, err := strconv.ParseUint(id, 10, 64)
 	if err != nil {
 		return 0, errors.New("invalid employee id")
+	}
+	if parsed > uint64(^uint(0)) {
+		return 0, errors.New("employee id is out of range")
 	}
 	return uint(parsed), nil
 }

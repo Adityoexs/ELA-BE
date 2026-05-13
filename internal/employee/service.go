@@ -93,7 +93,7 @@ func (s *service) Update(ctx context.Context, id uint, input UpdateEmployeeInput
 	}
 
 	if err := s.repo.Update(ctx, employee); err != nil {
-		return nil, fmt.Errorf("update employee in service: %w", err)
+		return nil, fmt.Errorf("update employee: %w", err)
 	}
 
 	s.logger.WithField("employee_id", employee.ID).Info("employee updated")
