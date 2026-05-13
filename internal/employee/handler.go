@@ -156,12 +156,9 @@ func (h *Handler) Delete(c *gin.Context) {
 }
 
 func parseID(id string) (uint, error) {
-	parsed, err := strconv.ParseUint(id, 10, 64)
+	parsed, err := strconv.ParseUint(id, 10, strconv.IntSize)
 	if err != nil {
 		return 0, errors.New("invalid employee id")
-	}
-	if parsed > uint64(^uint(0)) {
-		return 0, errors.New("employee id is out of range")
 	}
 	return uint(parsed), nil
 }
