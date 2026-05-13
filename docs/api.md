@@ -10,16 +10,110 @@ Employee List Application — REST API reference.
 
 ## Table of contents
 
-1. [Health check](#health-check)
-2. [Employee endpoints](#employee-endpoints)
+1. [Authentication](#authentication)
+   - [Login](#login)
+   - [Authenticated usage](#authenticated-usage)
+2. [Health check](#health-check)
+3. [Employee endpoints](#employee-endpoints)
    - [Create an employee](#create-an-employee)
    - [List all employees](#list-all-employees)
    - [Get an employee by ID](#get-an-employee-by-id)
    - [Update an employee](#update-an-employee)
    - [Delete an employee](#delete-an-employee)
-3. [Employee object](#employee-object)
-4. [Error responses](#error-responses)
-5. [Status code summary](#status-code-summary)
+4. [Employee object](#employee-object)
+5. [Error responses](#error-responses)
+6. [Status code summary](#status-code-summary)
+
+---
+
+## Authentication
+
+All `/api/v1/employees` endpoints require a valid **Bearer JWT** in the `Authorization` header.
+
+### Login
+
+```
+POST /api/v1/auth/login
+```
+
+Returns a signed JWT on successful authentication.
+
+**Request body**
+
+| Field      | Type   | Required | Description                |
+|------------|--------|----------|----------------------------|
+| `email`    | string | ✅ yes   | Registered email address   |
+| `password` | string | ✅ yes   | Password for the account   |
+
+```json
+{
+  "email": "admin@example.com",
+  "password": "admin123"
+}
+```
+
+**Response `200 OK`**
+
+```json
+{
+  "token": "<signed JWT>"
+}
+```
+
+**Error responses**
+
+| Status | Condition                              | Body                                      |
+|--------|----------------------------------------|-------------------------------------------|
+| `400`  | Missing or invalid `email`/`password`  | `{"error": "..."}`                        |
+| `401`  | Wrong email or password                | `{"error": "invalid email or password"}`  |
+
+**Example curl**
+
+```bash
+# Obtain a JWT
+curl -s -X POST http://localhost:8080/api/v1/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"email":"admin@example.com","password":"admin123"}'
+```
+
+> **MVP note:** The default user (`admin@example.com` / `admin123`) is hardcoded in
+> `internal/auth/service.go`. Replace the `mvpUsers` map with a real database lookup
+> once a users table is introduced.
+
+---
+
+### Authenticated usage
+
+Pass the token returned by `POST /api/v1/auth/login` as a `Bearer` token in every
+request to a protected endpoint:
+
+```bash
+# Store the token
+TOKEN=$(curl -s -X POST http://localhost:8080/api/v1/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"email":"admin@example.com","password":"admin123"}' | jq -r .token)
+
+# Use it to list employees
+curl -s http://localhost:8080/api/v1/employees \
+  -H "Authorization: Bearer $TOKEN"
+```
+
+**401 responses returned when the token is:**
+
+| Scenario              | Response body                                            |
+|-----------------------|----------------------------------------------------------|
+| Header absent         | `{"error": "authorization header required"}`             |
+| Non-Bearer scheme     | `{"error": "authorization header must use Bearer scheme"}` |
+| Invalid / expired     | `{"error": "invalid or expired token"}`                  |
+
+**JWT configuration** (via `configs/config.yaml` or environment variables):
+
+| Config key              | Env variable          | Default                        |
+|-------------------------|-----------------------|--------------------------------|
+| `jwt.secret`            | `JWT_SECRET`          | `change-me-in-production`      |
+| `jwt.expiry_seconds`    | `JWT_EXPIRY_SECONDS`  | `3600` (1 hour)                |
+
+> **Security note:** Always set `JWT_SECRET` to a strong random value in production.
 
 ---
 
@@ -296,9 +390,10 @@ All error responses share the same JSON shape:
 
 | Code  | Meaning          | Used by                              |
 |-------|------------------|--------------------------------------|
-| `200` | OK               | GET endpoints, PUT                   |
+| `200` | OK               | GET endpoints, PUT, Login            |
 | `201` | Created          | POST (create employee)               |
 | `204` | No Content       | DELETE                               |
 | `400` | Bad Request      | Validation / parse errors            |
+| `401` | Unauthorized     | Missing, invalid, or expired JWT     |
 | `404` | Not Found        | Resource does not exist              |
 | `500` | Internal Server Error | Unexpected / unhandled errors   |

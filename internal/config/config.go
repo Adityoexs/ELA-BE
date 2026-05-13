@@ -10,6 +10,12 @@ import (
 type Config struct {
 	App      AppConfig      `mapstructure:"app"`
 	Database DatabaseConfig `mapstructure:"database"`
+	JWT      JWTConfig      `mapstructure:"jwt"`
+}
+
+type JWTConfig struct {
+	Secret        string `mapstructure:"secret"`
+	ExpirySeconds int    `mapstructure:"expiry_seconds"`
 }
 
 type AppConfig struct {
@@ -49,6 +55,8 @@ func Load() (Config, error) {
 	v.SetDefault("database.name", "ela")
 	v.SetDefault("database.ssl_mode", "disable")
 	v.SetDefault("database.timezone", "UTC")
+	v.SetDefault("jwt.secret", "change-me-in-production")
+	v.SetDefault("jwt.expiry_seconds", 3600)
 
 	if err := v.ReadInConfig(); err != nil {
 		_, notFound := err.(viper.ConfigFileNotFoundError)

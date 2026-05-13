@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 
+	"github.com/Adityoexs/ELA-BE/internal/auth"
 	"github.com/Adityoexs/ELA-BE/internal/config"
 	"github.com/Adityoexs/ELA-BE/internal/database"
 	"github.com/Adityoexs/ELA-BE/internal/employee"
@@ -32,7 +33,18 @@ func main() {
 	endpoints := employee.NewEndpoints(svc)
 	handler := employee.NewHandler(endpoints, log.WithField("component", "employee_handler"))
 
-	router := transporthttp.NewRouter(handler)
+	authSvc := auth.NewService(cfg.JWT)
+	authHandler := auth.NewHandler(authSvc, log.WithField("component", "auth_handler"))
+
+	if cfg.JWT.Secret == "change-me-in-production" {
+		msg := "JWT secret is set to the default value – set JWT_SECRET to a strong random secret before deploying"
+		if cfg.App.Env == "production" {
+			log.Fatal(msg)
+		}
+		log.Warn(msg)
+	}
+
+	router := transporthttp.NewRouter(handler, authHandler, authSvc)
 	addr := fmt.Sprintf(":%s", cfg.App.Port)
 	log.WithField("addr", addr).Info("starting API server")
 

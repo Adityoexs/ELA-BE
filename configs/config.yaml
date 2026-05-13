@@ -11,3 +11,7 @@ database:
   name: ela
   ssl_mode: disable
   timezone: UTC
+
+jwt:
+  secret: change-me-in-production
+  expiry_seconds: 3600
