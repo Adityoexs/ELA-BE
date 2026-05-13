@@ -53,7 +53,7 @@ func (s *service) Create(ctx context.Context, input CreateEmployeeInput) (*Emplo
 	}
 
 	if err := s.repo.Create(ctx, employee); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("create employee: %w", err)
 	}
 
 	s.logger.WithField("employee_id", employee.ID).Info("employee created")
