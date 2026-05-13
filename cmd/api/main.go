@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 
+	"github.com/Adityoexs/ELA-BE/internal/auth"
 	"github.com/Adityoexs/ELA-BE/internal/config"
 	"github.com/Adityoexs/ELA-BE/internal/database"
 	"github.com/Adityoexs/ELA-BE/internal/employee"
@@ -32,7 +33,10 @@ func main() {
 	endpoints := employee.NewEndpoints(svc)
 	handler := employee.NewHandler(endpoints, log.WithField("component", "employee_handler"))
 
-	router := transporthttp.NewRouter(handler)
+	authSvc := auth.NewService(cfg.JWT)
+	authHandler := auth.NewHandler(authSvc, log.WithField("component", "auth_handler"))
+
+	router := transporthttp.NewRouter(handler, authHandler, authSvc)
 	addr := fmt.Sprintf(":%s", cfg.App.Port)
 	log.WithField("addr", addr).Info("starting API server")
 
