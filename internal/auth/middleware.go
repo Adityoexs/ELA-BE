@@ -39,12 +39,16 @@ func Middleware(svc *Service) gin.HandlerFunc {
 }
 
 // GetClaims retrieves the validated JWT claims stored by Middleware.
-// Returns nil if the claims are not present (e.g. on unprotected routes).
+// Returns nil if the claims are not present (e.g. on unprotected routes) or
+// if the stored value is not of the expected *Claims type.
 func GetClaims(c *gin.Context) *Claims {
 	val, exists := c.Get(claimsKey)
 	if !exists {
 		return nil
 	}
-	claims, _ := val.(*Claims)
+	claims, ok := val.(*Claims)
+	if !ok {
+		return nil
+	}
 	return claims
 }

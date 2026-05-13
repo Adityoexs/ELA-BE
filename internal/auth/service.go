@@ -1,6 +1,7 @@
 package auth
 
 import (
+	"crypto/subtle"
 	"errors"
 	"time"
 
@@ -20,12 +21,19 @@ type Claims struct {
 	jwt.RegisteredClaims
 }
 
-// mvpUsers is an in-memory user store used for the MVP.
-// Replace (or extend) this with a real database lookup once a users table exists.
-var mvpUsers = map[string]struct {
+// mvpUser holds an in-memory user entry used for the MVP.
+// WARNING: This is a temporary placeholder for development/demo purposes only.
+// Passwords are stored as plain strings solely because this map is never persisted
+// and the credentials are not real secrets. Replace this with a real database
+// lookup (with properly hashed passwords) before any production deployment.
+type mvpUser struct {
 	password string
 	role     string
-}{
+}
+
+// mvpUsers is the in-memory user store used for the MVP.
+// Replace (or extend) this with a real database lookup once a users table exists.
+var mvpUsers = map[string]mvpUser{
 	"admin@example.com": {password: "admin123", role: "admin"},
 }
 
@@ -39,10 +47,22 @@ func NewService(cfg config.JWTConfig) *Service {
 	return &Service{cfg: cfg}
 }
 
+// dummyPassword is used to perform a constant-time comparison when a user is
+// not found, so that the response time does not reveal whether an email exists.
+var dummyPassword = []byte("dummy-password-for-timing-safety")
+
 // Login verifies credentials and returns a signed JWT on success.
+// Password comparison uses constant-time equality to prevent timing attacks.
 func (s *Service) Login(email, password string) (string, error) {
 	user, ok := mvpUsers[email]
-	if !ok || user.password != password {
+	if !ok {
+		// Always perform a comparison even when the user is not found to prevent
+		// user-enumeration via response-time differences.
+		subtle.ConstantTimeCompare([]byte(password), dummyPassword)
+		return "", ErrInvalidCredentials
+	}
+
+	if subtle.ConstantTimeCompare([]byte(password), []byte(user.password)) != 1 {
 		return "", ErrInvalidCredentials
 	}
 
