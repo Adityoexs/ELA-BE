@@ -53,11 +53,13 @@ curl http://localhost:8080/health
 
 Base path: `/api/v1/employees`
 
-- `POST /api/v1/employees`
-- `GET /api/v1/employees`
-- `GET /api/v1/employees/:id`
-- `PUT /api/v1/employees/:id`
-- `DELETE /api/v1/employees/:id`
+| Method   | Path                       | Description           |
+|----------|----------------------------|-----------------------|
+| `POST`   | `/api/v1/employees`        | Create an employee    |
+| `GET`    | `/api/v1/employees`        | List all employees    |
+| `GET`    | `/api/v1/employees/:id`    | Get employee by ID    |
+| `PUT`    | `/api/v1/employees/:id`    | Update an employee    |
+| `DELETE` | `/api/v1/employees/:id`    | Delete an employee    |
 
 Example create payload:
 
@@ -68,6 +70,9 @@ Example create payload:
   "position": "Software Engineer"
 }
 ```
+
+📄 **Full API reference:** [`docs/api.md`](docs/api.md)  
+📐 **OpenAPI 3.0 spec:** [`docs/openapi.yaml`](docs/openapi.yaml)
 
 ## Run with Docker
 
