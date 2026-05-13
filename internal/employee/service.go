@@ -82,14 +82,14 @@ func (s *service) Update(ctx context.Context, id uint, input UpdateEmployeeInput
 		return nil, err
 	}
 
-	if strings.TrimSpace(input.Name) != "" {
-		employee.Name = input.Name
+	if name := strings.TrimSpace(input.Name); name != "" {
+		employee.Name = name
 	}
-	if strings.TrimSpace(input.Email) != "" {
-		employee.Email = input.Email
+	if email := strings.TrimSpace(input.Email); email != "" {
+		employee.Email = email
 	}
-	if strings.TrimSpace(input.Position) != "" {
-		employee.Position = input.Position
+	if position := strings.TrimSpace(input.Position); position != "" {
+		employee.Position = position
 	}
 
 	if err := s.repo.Update(ctx, employee); err != nil {

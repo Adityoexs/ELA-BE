@@ -113,8 +113,7 @@ type DeleteRequest struct {
 }
 
 type DeleteResponse struct {
-	Success bool   `json:"success"`
-	Error   string `json:"error,omitempty"`
+	Error string `json:"error,omitempty"`
 }
 
 func MakeDeleteEndpoint(svc Service) endpoint.Endpoint {
@@ -123,6 +122,6 @@ func MakeDeleteEndpoint(svc Service) endpoint.Endpoint {
 		if err := svc.Delete(ctx, req.ID); err != nil {
 			return DeleteResponse{Error: err.Error()}, nil
 		}
-		return DeleteResponse{Success: true}, nil
+		return DeleteResponse{}, nil
 	}
 }
